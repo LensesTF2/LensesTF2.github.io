@@ -1,0 +1,268 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Simulação de Phishing — Darkay</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;700;800&family=Space+Grotesk:wght@500;700&display=swap');
+
+  :root {
+    --bg: #05080a;
+    --bg-panel: #0a1210;
+    --green-bright: #39ff88;
+    --green-mid: #1fae5c;
+    --green-dim: #0e5c34;
+    --amber: #ffb454;
+    --red-alert: #ff4d4d;
+    --text-dim: #6b8f7c;
+    --border: #143d28;
+  }
+
+  * { box-sizing: border-box; }
+
+  body {
+    margin: 0;
+    min-height: 100vh;
+    background: var(--bg);
+    background-image:
+      radial-gradient(ellipse at top, rgba(31,174,92,0.08), transparent 60%),
+      repeating-linear-gradient(0deg, rgba(57,255,136,0.025) 0px, rgba(57,255,136,0.025) 1px, transparent 1px, transparent 3px);
+    color: var(--green-bright);
+    font-family: 'JetBrains Mono', monospace;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 24px;
+  }
+
+  .crt {
+    position: fixed;
+    inset: 0;
+    pointer-events: none;
+    background: linear-gradient(rgba(18,255,120,0.02) 50%, transparent 50%);
+    background-size: 100% 4px;
+    animation: scan 8s linear infinite;
+    z-index: 10;
+  }
+  @keyframes scan { from { background-position: 0 0; } to { background-position: 0 100px; } }
+
+  .wrap {
+    width: 100%;
+    max-width: 680px;
+  }
+
+  .term-bar {
+    background: var(--bg-panel);
+    border: 1px solid var(--border);
+    border-bottom: none;
+    border-radius: 8px 8px 0 0;
+    padding: 10px 16px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 12px;
+    color: var(--text-dim);
+  }
+  .dot { width: 10px; height: 10px; border-radius: 50%; }
+  .dot.r { background: #ff5f56; }
+  .dot.y { background: #ffbd2e; }
+  .dot.g { background: #27c93f; }
+  .term-title { margin-left: 12px; letter-spacing: 0.5px; }
+
+  .panel {
+    background: var(--bg-panel);
+    border: 1px solid var(--border);
+    border-radius: 0 0 8px 8px;
+    padding: 40px 36px 36px;
+    box-shadow: 0 0 60px rgba(57,255,136,0.06), inset 0 0 40px rgba(0,0,0,0.4);
+  }
+
+  .status-line {
+    font-size: 12px;
+    color: var(--green-mid);
+    margin-bottom: 4px;
+    opacity: 0.8;
+  }
+
+  .prompt {
+    font-size: 13px;
+    color: var(--green-mid);
+    margin-bottom: 20px;
+  }
+  .prompt::before { content: "$ "; color: var(--green-bright); }
+
+  h1 {
+    font-family: 'Space Grotesk', sans-serif;
+    font-size: clamp(38px, 7vw, 58px);
+    font-weight: 700;
+    letter-spacing: 2px;
+    margin: 0 0 6px;
+    color: var(--red-alert);
+    text-shadow: 0 0 18px rgba(255,77,77,0.5), 0 0 2px rgba(255,77,77,0.8);
+    line-height: 1;
+  }
+
+  .glitch-tag {
+    display: inline-block;
+    font-size: 13px;
+    letter-spacing: 3px;
+    color: var(--bg);
+    background: var(--green-bright);
+    padding: 4px 10px;
+    margin-bottom: 28px;
+    font-weight: 700;
+  }
+
+  .divider {
+    height: 1px;
+    background: linear-gradient(90deg, var(--border), var(--green-dim), var(--border));
+    margin: 24px 0;
+  }
+
+  .body-text {
+    font-size: 15px;
+    line-height: 1.75;
+    color: #c8e6d4;
+    margin: 0 0 16px;
+  }
+  .body-text strong { color: var(--green-bright); font-weight: 600; }
+  .body-text .highlight { color: var(--amber); }
+
+  .log {
+    background: rgba(0,0,0,0.35);
+    border: 1px solid var(--border);
+    border-left: 3px solid var(--red-alert);
+    border-radius: 4px;
+    padding: 14px 16px;
+    font-size: 12.5px;
+    color: var(--text-dim);
+    margin: 24px 0;
+  }
+  .log div { margin-bottom: 4px; }
+  .log div:last-child { margin-bottom: 0; }
+  .log .k { color: var(--green-mid); }
+  .log .v { color: #d7e8dc; }
+
+  .action-box {
+    margin-top: 32px;
+    padding: 22px;
+    border: 1px solid var(--green-dim);
+    border-radius: 6px;
+    background: rgba(31,174,92,0.05);
+  }
+  .action-box h2 {
+    font-family: 'Space Grotesk', sans-serif;
+    font-size: 15px;
+    letter-spacing: 1px;
+    text-transform: uppercase;
+    color: var(--green-bright);
+    margin: 0 0 12px;
+  }
+  .action-box p {
+    font-size: 14px;
+    color: #c8e6d4;
+    line-height: 1.7;
+    margin: 0 0 18px;
+  }
+
+  .btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 10px;
+    background: var(--green-bright);
+    color: var(--bg);
+    text-decoration: none;
+    font-family: 'JetBrains Mono', monospace;
+    font-weight: 700;
+    font-size: 14px;
+    padding: 13px 22px;
+    border-radius: 5px;
+    letter-spacing: 0.5px;
+    transition: transform 0.15s ease, box-shadow 0.15s ease;
+    box-shadow: 0 0 20px rgba(57,255,136,0.3);
+  }
+  .btn:hover { transform: translateY(-1px); box-shadow: 0 0 28px rgba(57,255,136,0.5); }
+  .btn::before { content: "▸"; }
+
+  .btn.disabled {
+    background: var(--border);
+    color: var(--text-dim);
+    box-shadow: none;
+    cursor: not-allowed;
+  }
+  .btn.disabled:hover { transform: none; }
+
+  .meta-note {
+    margin-top: 14px;
+    font-size: 11.5px;
+    color: var(--text-dim);
+  }
+
+  footer {
+    margin-top: 28px;
+    font-size: 11px;
+    color: var(--text-dim);
+    text-align: center;
+    letter-spacing: 0.5px;
+  }
+
+  @media (max-width: 480px) {
+    .panel { padding: 28px 20px; }
+    h1 { font-size: 34px; }
+  }
+</style>
+</head>
+<body>
+<div class="crt"></div>
+
+<div class="wrap">
+  <div class="term-bar">
+    <span class="dot r"></span><span class="dot y"></span><span class="dot g"></span>
+    <span class="term-title">darkay-secops :: simulacao-phishing.log</span>
+  </div>
+
+  <div class="panel">
+    <div class="status-line">[SISTEMA] conexão registrada — resultado processado</div>
+    <div class="prompt">whoami --check-awareness</div>
+
+    <h1>VOCÊ FOI<br>HACKEADO</h1>
+    <span class="glitch-tag">SIMULAÇÃO ENCERRADA</span>
+
+    <p class="body-text">
+      Calma — <strong>ninguém invadiu nada de verdade.</strong> Isso foi uma
+      <span class="highlight">simulação interna de phishing</span> conduzida pela equipe de
+      Segurança da Informação da Darkay. O link que você clicou fazia parte de um teste de
+      conscientização, e essa página confirma que a simulação identificou sua interação.
+    </p>
+
+    <div class="log">
+      <div><span class="k">status</span> → <span class="v">clique registrado</span></div>
+      <div><span class="k">tipo</span> → <span class="v">e-mail simulado de "atualização de credenciais"</span></div>
+      <div><span class="k">dados capturados</span> → <span class="v">nenhum — nenhuma senha foi coletada</span></div>
+      <div><span class="k">ação necessária</span> → <span class="v">participar do treinamento obrigatório</span></div>
+    </div>
+
+    <p class="body-text">
+      Em um ataque real, esse mesmo clique poderia ter exposto suas credenciais corporativas,
+      dado acesso a sistemas internos ou comprometido dados sensíveis da empresa. Por isso, todo
+      colaborador que interage com este tipo de simulação passa por um treinamento rápido — não é
+      punição, é reforço de segurança pra todo mundo.
+    </p>
+
+    <div class="action-box">
+      <h2>Próximo passo obrigatório</h2>
+      <p>
+        Participe do treinamento de conscientização sobre phishing. Vai levar cerca de 40 minutos
+        e cobre os sinais de alerta que passaram despercebidos neste teste.
+      </p>
+      <a href="https://meet.google.com/msv-nate-ucr?hs=224" class="btn" id="meet-link">Entrar no treinamento (Google Meet)</a>
+      <div class="meta-note">Link será liberado pela equipe de TI — verifique seu e-mail corporativo.</div>
+    </div>
+
+    <footer>DARKAY GROUP · SEGURANÇA DA INFORMAÇÃO · PROGRAMA DE CONSCIENTIZAÇÃO</footer>
+  </div>
+</div>
+
+</body>
+</html>
